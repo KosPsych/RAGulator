@@ -1,0 +1,15 @@
+FROM docker.elastic.co/eland/eland:8.12.0
+
+WORKDIR /app
+
+COPY ./app.py /app/app.py
+COPY ./download_model.py /app/download_model.py
+
+RUN pip install flask==3.0.2 gunicorn==21.2.0 requests==2.27.1
+
+EXPOSE 8888
+
+ENV MODEL_PATH '/app/model'
+
+CMD python3 download_model.py && exec gunicorn --bind :8888 --workers 1 --threads 8 app:app
+# CMD exec gunicorn --bind :8888 --workers 1 --threads 8 app:app
