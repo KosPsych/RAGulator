@@ -91,5 +91,3 @@ def add_chunk():
     return jsonify('done')
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
