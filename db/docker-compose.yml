@@ -1,0 +1,71 @@
+version: '3.4'
+services:
+  db:
+    build:
+      context: ./db
+      args:
+        - POSTGRES_DB=${POSTGRES_DB}
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "${DB_PORT1}:${DB_PORT2}"
+    volumes:
+      - dbData:/bitnami/postgresql
+    restart: always
+    env_file: .env
+  encryptor:
+    image: gcr.io/mineral-anchor-241612/llm-private-documentation/encryptor:latest
+    env_file: .env
+    volumes:
+      - /home/$CLIENT/files:/app/files
+    
+  ingestion:
+    build:
+      context: ./ingestion
+    env_file: .env
+    network_mode: "host"
+    volumes:
+      - /root/synthetica/keys:/app/keys
+  ingestion-gpu:
+    image: gcr.io/mineral-anchor-241612/llm-private-documentation/ingestion:gpu-latest
+    env_file: .env
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes: 
+      - /home/$CLIENT/logs:/app/logs
+      - /home/$CLIENT/files:/app/files
+      ## key for remote files fetch
+      # - /root/synthetica/keys/home_key:/app/keys/home_key
+
+  graph-db:
+    image: gcr.io/mineral-anchor-241612/llm-private-documentation/graph-db
+    ports:
+      - "7474:7474"
+      - "7687:7687"   
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/conf:/conf
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/data:/data
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/import:/import
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/logs:/logs
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/plugins:/plugins
+    environment: 
+      - NEO4J_server_config_strict__validation_enabled=false
+      # Raise memory limits
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms.memory.heap.initial_size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_PLUGINS=["apoc","graph-data-science"]
+    # # Set up the user
+    # user: ${USER_ID}:${GROUP_ID}  
+    restart: always
+    env_file: .env
+    
+volumes:
+  dbData:
+    labels:
+      persistent: 'true'
