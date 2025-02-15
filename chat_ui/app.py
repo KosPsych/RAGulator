@@ -1,6 +1,5 @@
 import streamlit as st
-from typing import List
-import time
+from openai_file import get_azure_openai_response_stream
 
 def initialize_session_state():
     """Initialize session state variables."""
@@ -8,13 +7,6 @@ def initialize_session_state():
         st.session_state.messages = []
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
-
-def mock_rag_response(query: str) -> str:
-    """
-    Temporary function to simulate RAG response.
-    Will be replaced with actual RAG implementation later.
-    """
-    return f"You asked: {query}"
 
 def display_chat_messages():
     """Display all messages in the chat interface."""
@@ -41,18 +33,28 @@ def main():
         # Add assistant response to chat
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
-            response = mock_rag_response(prompt)
+            full_response = ""
             
-            # Simulate typing
-            message_placeholder.markdown("▌")
-            time.sleep(0.5)
-            message_placeholder.markdown(response)
-            
-        # Store assistant response
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        
-        # Update chat history
-        st.session_state.chat_history.append({"query": prompt, "response": response})
+            try:
+                # Get streaming response from Azure OpenAI
+                for response_chunk in get_azure_openai_response_stream(prompt, st.session_state.chat_history):
+                    full_response += response_chunk
+                    # Add a blinking cursor to show it's still thinking
+                    message_placeholder.markdown(full_response + "▌")
+                
+                # Final update without the cursor
+                message_placeholder.markdown(full_response)
+                
+                # Store assistant response
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+                
+                # Update chat history
+                st.session_state.chat_history.append({"query": prompt, "response": full_response})
+                
+            except Exception as e:
+                error_message = f"An error occurred: {str(e)}"
+                message_placeholder.markdown(error_message)
+                st.session_state.messages.append({"role": "assistant", "content": error_message})
 
 if __name__ == "__main__":
     main()
