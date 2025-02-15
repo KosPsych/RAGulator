@@ -1,20 +1,20 @@
 from flask import Flask, jsonify, request
 from neo4j import GraphDatabase
+import os
 app = Flask(__name__)
-
+import time
 
 
 @app.route('/healthcheck', methods=['GET'])
 def healthcheck():
-
-    # Connection details
+    # Connect to Neo4j
     uri = "neo4j://localhost:7687"
-    username = "neo4j"
-    password = "12345678"
-
+    username = 'neo4j'
+    password = os.getenv('NEO4J_PASSWORD')
+    driver = GraphDatabase.driver(uri, auth=(username, password))
     # Establish connection
     try:
-        driver = GraphDatabase.driver(uri, auth=(username, password))
+        
         with driver.session() as session:
             result = session.run("RETURN 'Connection Successful' AS message")
             for record in result:
@@ -38,7 +38,7 @@ def get_items():
     # Connect to Neo4j
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
-    password = '12345678' 
+    password = os.getenv('NEO4J_PASSWORD')
     chunk_list = []
     driver = GraphDatabase.driver(uri, auth=(username, password))
     with driver.session() as inner_session:
@@ -61,7 +61,7 @@ def add_document():
     # Connect to Neo4j
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
-    password = '12345678' 
+    password = os.getenv('NEO4J_PASSWORD')
     chunk_list = []
     driver = GraphDatabase.driver(uri, auth=(username, password))
     with driver.session() as inner_session:
@@ -82,7 +82,7 @@ def add_chunk():
     # Connect to Neo4j
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
-    password = '12345678' 
+    password = os.getenv('NEO4J_PASSWORD')
     chunk_list = []
     driver = GraphDatabase.driver(uri, auth=(username, password))
     with driver.session() as inner_session:
