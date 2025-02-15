@@ -4,12 +4,10 @@ from openai_acess import OpenAIModel
 from langchain_core.prompts.few_shot import FewShotPromptTemplate
 from langchain_core.prompts.prompt import PromptTemplate
 
-
 load_dotenv()
 
 model = OpenAIModel()
 
-## TODO: FIND QUESTIONS AND ANSWERS
 examples = [
     {
         "question": "Είναι κρίσιμη εξωτερική ανάθεση η χρήση πλατφόρμας δέουσας επιμέλειας για τον έλεγχο συμμόρφωσης των εκκαθαριστικών μελών;",
@@ -24,25 +22,19 @@ examples = [
         "answer": "Legal",
     },
     {
-        "question": "Ποιες είναι οι υποχρεώσεις διασποράς των εισηγμένων εταιρειών;",
-        "answer": "",
+        "question": "Απο πού μπορεί να προμηθευτεί ένας νέος υπάλληλος εταιρικό εξοπλισμό",
+        "answer": "IT",
     },
     {
-        "question": "Θεωρείτε για ένα CSD κρίσιμη εξωτερική ανάθεση η ανάθεση του ελέγχου συμμόρφωσης συμμετεχόντων;",
-        "answer": "",
-    },
-    {
-        "question": "",
-        "answer": "",
+        "question": "When a employee can take personal leave?",
+        "answer": "IT",
     },
 ]
-
 
 example_prompt = PromptTemplate(
     input_variables=["question", "answer"],
     template="Question: {question}\nAnswer: {answer}\n"
 )
-
 
 print("Example Prompt:")
 print(example_prompt.format(**examples[0]))
@@ -54,21 +46,25 @@ prompt = FewShotPromptTemplate(
     input_variables=["input"],
 )
 
+print("Enter 'quit' or 'exit' to end the conversation.")
 
-formatted_prompt = prompt.format(input="Whe Apostolis born?")
-
-inputs = {
-    'messages': [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": formatted_prompt}
-    ],
-    'params': {
-        'temperature': 0.7,
-        'max_tokens': 100
+while True:
+    user_input = input("Your question: ")
+    if user_input.lower() in ['quit', 'exit']:
+        break
+    formatted_prompt = prompt.format(input=user_input)
+    inputs = {
+        'messages': [
+            {"role": "system", "content": """"You are an assistant specialized in query classification.
+             When you receive a user query, analyze its content and determine whether it relates to "IT" (Information Technology) or "Legal" (Legal and Compliance).
+             Your response should be a single word: either "IT" or "Legal". Do not include any additional commentary."""
+            },
+            {"role": "user", "content": formatted_prompt}
+        ],
+        'params': {
+            'temperature': 0.7,
+            'max_tokens': 100
+        }
     }
-}
-
-
-response = model.predict(inputs)
-
-print(response["response"])
+    response = model.predict(inputs)
+    print("Response:", response["response"])
