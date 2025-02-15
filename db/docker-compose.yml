@@ -1,46 +1,5 @@
 version: '3.4'
 services:
-  db:
-    build:
-      context: ./db
-      args:
-        - POSTGRES_DB=${POSTGRES_DB}
-        - POSTGRES_USER=${POSTGRES_USER}
-        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    ports:
-      - "${DB_PORT1}:${DB_PORT2}"
-    volumes:
-      - dbData:/bitnami/postgresql
-    restart: always
-    env_file: .env
-  encryptor:
-    image: gcr.io/mineral-anchor-241612/llm-private-documentation/encryptor:latest
-    env_file: .env
-    volumes:
-      - /home/$CLIENT/files:/app/files
-    
-  ingestion:
-    build:
-      context: ./ingestion
-    env_file: .env
-    network_mode: "host"
-    volumes:
-      - /root/synthetica/keys:/app/keys
-  ingestion-gpu:
-    image: gcr.io/mineral-anchor-241612/llm-private-documentation/ingestion:gpu-latest
-    env_file: .env
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    volumes: 
-      - /home/$CLIENT/logs:/app/logs
-      - /home/$CLIENT/files:/app/files
-      ## key for remote files fetch
-      # - /root/synthetica/keys/home_key:/app/keys/home_key
 
   graph-db:
     image: gcr.io/mineral-anchor-241612/llm-private-documentation/graph-db
