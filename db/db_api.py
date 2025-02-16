@@ -50,6 +50,31 @@ def get_items():
     return jsonify(chunk_list)
 
 
+@app.route('/get_documents', methods=['GET'])
+def get_documents():
+    # Get the JSON data sent in the request body
+    input_data = request.get_json()
+    
+    # Print the received input data
+    print("Query_string:", input_data['query_string'])
+    
+
+    # Connect to Neo4j
+    uri = "neo4j://localhost:7687"
+    username = 'neo4j'
+    password = os.getenv('NEO4J_PASSWORD')
+    document_list = []
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+    with driver.session() as inner_session:
+        result =  inner_session.run(input_data['query_string'])
+
+        for r in result:
+           document_list.append( (r['name'], r['language'], r['tag']))
+
+    return jsonify(document_list)
+
+
+
 @app.route('/add_document', methods=['POST'])
 def add_document():
     # Get the JSON data sent in the request body
@@ -57,15 +82,15 @@ def add_document():
     
     # Print the received input data
     print("Query_string:", input_data['query_string'])
-
+  
     # Connect to Neo4j
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
     password = os.getenv('NEO4J_PASSWORD')
-    chunk_list = []
+   
     driver = GraphDatabase.driver(uri, auth=(username, password))
     with driver.session() as inner_session:
-        nner_session.run(input_data['query_string'])
+        inner_session.run(input_data['query_string'])
 
     return jsonify('done')
 
@@ -83,10 +108,10 @@ def add_chunk():
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
     password = os.getenv('NEO4J_PASSWORD')
-    chunk_list = []
+    
     driver = GraphDatabase.driver(uri, auth=(username, password))
     with driver.session() as inner_session:
-        nner_session.run(input_data['query_string'])
+        inner_session.run(input_data['query_string'])
 
     return jsonify('done')
 
