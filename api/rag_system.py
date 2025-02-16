@@ -3,117 +3,116 @@ import json
 import uuid
 from datetime import datetime
 import requests
+from dotenv import load_dotenv
 from openai_acess import OpenAIModel
 
-conversations = {}
+# Ensure environment variables are loaded
+load_dotenv()
 
-def create_session():
-    """Create a new conversation session."""
-    session_id = str(uuid.uuid4())
-    conversations[session_id] = []
-    return session_id
+class RAGSystem:
+    def __init__(self):
+        self.model = OpenAIModel()
+        self.conversations = {}
+        self.embedding_url = os.getenv("EMBEDDING_URL")
+        if not self.embedding_url:
+            raise ValueError("Missing EMBEDDING_URL environment variable.")
+        self.get_chunks_url = os.getenv("GET_CHUNKS_URL")
+        if not self.get_chunks_url:
+            raise ValueError("Missing GET_CHUNKS_URL environment variable.")
 
-def add_message(session_id: str, role: str, content: str):
-    """Add a message to the conversation history."""
-    if session_id not in conversations:
-        conversations[session_id] = []
-    conversations[session_id].append({
-        "role": role,
-        "content": content,
-        "timestamp": datetime.now().isoformat()
-    })
+    def create_session(self) -> str:
+        """Create a new conversation session and return its session ID."""
+        session_id = str(uuid.uuid4())
+        self.conversations[session_id] = []
+        return session_id
 
-def get_conversation_history(session_id: str, max_messages: int = None):
-    """Retrieve the conversation history for a session."""
-    history = conversations.get(session_id, [])
-    return history[-max_messages:] if max_messages else history
+    def add_message(self, session_id: str, role: str, content: str):
+        """Add a message to the conversation history."""
+        if session_id not in self.conversations:
+            self.conversations[session_id] = []
+        self.conversations[session_id].append({
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now().isoformat()
+        })
 
-def format_history_for_prompt(session_id: str, max_messages: int = 5):
-    """Format conversation history for inclusion in prompts."""
-    history = get_conversation_history(session_id, max_messages)
-    formatted = ""
-    for msg in history:
-        role = "Human" if msg["role"] == "user" else "Assistant"
-        formatted += f"{role}: {msg['content']}\n\n"
-    return formatted.strip()
+    def get_conversation_history(self, session_id: str, max_messages: int = None):
+        """Retrieve the conversation history for a session."""
+        history = self.conversations.get(session_id, [])
+        return history[-max_messages:] if max_messages else history
 
-def get_embedding(text: str):
-    """
-    Send a request to the deployed embedding model to get the embedding.
-    The endpoint expects a payload in the form: {'text': ['your text']}
-    """
-    url = "https://embeddingmodel-emgsc9drgwefg0ea.francecentral-01.azurewebsites.net/embed"
-    payload = {"text": [text]}
-    
-    response = requests.post(url, json=payload)
-    response.raise_for_status()
-    
-    result = response.json()
-    print (result)
-    if result is None:
-        raise ValueError("No embedding returned from the deployed model.")
+    def format_history_for_prompt(self, session_id: str, max_messages: int = 5) -> str:
+        """Format conversation history for inclusion in prompts."""
+        history = self.get_conversation_history(session_id, max_messages)
+        formatted = ""
+        for msg in history:
+            role = "Human" if msg["role"] == "user" else "Assistant"
+            formatted += f"{role}: {msg['content']}\n\n"
+        return formatted.strip()
 
-    if result is None:
-        raise ValueError("No embedding found in the response.")
-    return result
+    def get_embedding(self, text: str):
+        """
+        Get an embedding for the provided text by calling the deployed embedding model.
+        """
+        payload = {"text": [text]}
+        response = requests.post(self.embedding_url, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        if result is None:
+            raise ValueError("No embedding returned from the deployed model.")
+        return result
 
-def get_chunks_from_api(query_string):
-    """
+    def get_chunks_from_api(self, query_string: str):
+        """
+        Send a request to retrieve document chunks based on the Cypher query.
+        """
+        headers = {'Content-Type': 'application/json'}
+        payload = {'query_string': query_string}
+        try:
+            response = requests.get(self.get_chunks_url, headers=headers, json=payload)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error communicating with API: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON response: {e}")
+            return None
 
-    """
-    api_url = "https://codequestai-hnbxb5d2hfgnegav.francecentral-01.azurewebsites.net/get_chunks"
-    headers = {'Content-Type': 'application/json'}
-    payload = {'query_string': query_string}
+    def retrieve_chunks_from_endpoint(self, query: str, top_k: int = 5):
+        """
+        Retrieve the top_k most relevant document chunks based on the user query.
+        Computes the query embedding, builds a Cypher query for Neo4j, and returns the result.
+        """
+        query_embedding = self.get_embedding(query)
+        cypher_query = f"""
+        MATCH (n:Chunk)
+        WITH n, gds.similarity.cosine(n.embedding, {query_embedding}) AS similarity
+        RETURN n.text AS text, n.page AS page
+        ORDER BY similarity DESC
+        LIMIT {top_k}
+        """
+        return self.get_chunks_from_api(cypher_query)
 
-    try:
-        response = requests.get(api_url, headers=headers, json=payload)
-        response.raise_for_status() 
-        return response.json()       
-    except requests.exceptions.RequestException as e:
-        print(f"Error communicating with API: {e}")
-        return None
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON response: {e}")
-        return None
+    def rag_query(self, query: str, session_id: str, n_chunks: int = 3):
+        """
+        Retrieve relevant document chunks, build a prompt using conversation history,
+        and generate an answer using the OpenAI model.
+        """
+        conversation_history = self.format_history_for_prompt(session_id)
+        chunks_data = self.retrieve_chunks_from_endpoint(query, top_k=n_chunks)
 
-def retrieve_chunks_from_endpoint(query: str, top_k: int = 5):
-    """
-    Retrieves the top_k most relevant document chunks based on the user query.
-    It computes the query embedding, builds a Cypher query that scores each document by cosine similarity,
-    and then sends the query to the Neo4j API endpoint.
+        # Process the chunks data.
+        chunks = []
+        sources = []
+        if chunks_data:
+            for item in chunks_data:
+                if isinstance(item, dict):
+                    chunks.append(item.get("text", ""))
+                    sources.append(item.get("page", ""))
+        context = "\n\n".join(chunks)
 
-    Args:
-        query (str): The user query.
-        top_k (int, optional): The number of top results to return. Defaults to 5.
-
-    Returns:
-        A list of document chunks (e.g. tuples containing text and page).
-    """
-    query_embedding = get_embedding(query)
-
-    cypher_query = f"""
-    MATCH (n:Chunk)
-    WITH n, gds.similarity.cosine(n.embedding, {query_embedding}) AS similarity
-    RETURN n.text AS text, n.page AS page
-    ORDER BY similarity DESC
-    LIMIT {top_k}
-    """
-    
-    return get_chunks_from_api(cypher_query)
-
-
-def rag_query(query: str, session_id: str, n_chunks: int = 3):
-    """
-    Retrieve relevant chunks from the DB via the endpoint, build a prompt using conversation history,
-    and generate an answer using the OpenAIModel's predict method.
-    """
-    conversation_history = format_history_for_prompt(session_id)
-    
-    chunks, sources = retrieve_chunks_from_endpoint(query, top_k=n_chunks)
-    
-    context = "\n\n".join(chunks)
-    
-    prompt_message = f"""Based on the context provided below and the previous conversation,
+        prompt_message = f"""Based on the context provided below and the previous conversation,
 please answer the following question. If the answer is not in the context, refer to the conversation
 history or state that there is insufficient information.
 
@@ -125,33 +124,28 @@ Conversation History:
 
 Question:
 {query}"""
-    
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant that answers questions based on the provided context."},
-        {"role": "user", "content": prompt_message}
-    ]
-    
-    params = {
-        "temperature": 0.0,
-        "max_tokens": 500
-    }
-    
-    inputs = {"messages": messages, "params": params}
-    
-    model = OpenAIModel()
-    result = model.predict(inputs)
-    
-    add_message(session_id, "user", query)
-    add_message(session_id, "assistant", result.get("response", ""))
-    
-    return result.get("response", ""), sources
+
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that answers questions based on the provided context."},
+            {"role": "user", "content": prompt_message}
+        ]
+        params = {
+            "temperature": 0.0,
+            "max_tokens": 500
+        }
+        inputs = {"messages": messages, "params": params}
+
+        result = self.model.predict(inputs)
+        self.add_message(session_id, "user", query)
+        self.add_message(session_id, "assistant", result.get("response", ""))
+
+        return result.get("response", ""), sources
+
 
 if __name__ == "__main__":
-    session_id = create_session()
-    
+    rag_system = RAGSystem()
+    session_id = rag_system.create_session()
     query = "When was GreenGrow Innovations founded?"
-    
-    answer, used_sources = rag_query(query, session_id)
-    
+    answer, used_sources = rag_system.rag_query(query, session_id)
     print("Answer:", answer)
     print("Sources:", used_sources)
