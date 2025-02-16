@@ -17,12 +17,19 @@ def main():
         user_query = input("\nEnter your query: ")
         if user_query.lower() in ["quit", "exit"]:
             break
+        
 
         classification = intent_recognizer.classify(user_query)
         print(f"Intent Classification: {classification}")
 
-        answer, sources = rag_system.rag_query(user_query, session_id)
-        print("RAG System Answer:", answer)
+        #MAIN LOGIC
+        if classification == "Legal":    
+            answer, sources = rag_system.rag_query(user_query, session_id)
+            print("RAG System Answer:", answer)
+        # IF IT IS DIFFERENT ANSWER CALL DIFFERENT CHUNKS: TODO NEED IMPLEMENTATION 
+        elif classification == "IT":
+            answer, sources = rag_system.rag_query(user_query, session_id)
+            print("RAG System Answer:", answer)   
         if sources:
             print("Sources:", sources)
         else:
