@@ -4,7 +4,8 @@ from openai import AzureOpenAI
 from typing import List, Dict, Generator
 
 # Load environment variables
-load_dotenv()
+if os.getcwd() != '/app':
+    load_dotenv()
 
 # Get Azure OpenAI credentials from environment variables
 azure_endpoint = os.getenv("OPENAI_API_URL")
