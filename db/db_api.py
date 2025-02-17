@@ -48,7 +48,7 @@ def get_items():
 
         for r in result:
            chunk_list.append( (r['text'], r['page']))
-
+   
     return jsonify(chunk_list)
 
 
@@ -60,7 +60,7 @@ def get_documents():
     # Print the received input data
     print("Query_string:", input_data['query_string'])
     
-
+    
     # Connect to Neo4j
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
@@ -76,9 +76,31 @@ def get_documents():
     return jsonify(document_list)
 
 
+@app.route('/keyword_search', methods=['GET'])
+def keyword_search():
+    # Get the JSON data sent in the request body
+    input_data = request.get_json()
+    
+    # Print the received input data
+    print("Query_string:", input_data['query_string'])
+ 
+    params = {'query': input_data['query']}
+    # Connect to Neo4j
+    uri = "neo4j://localhost:7687"
+    username = 'neo4j'
+    password = os.getenv('NEO4J_PASSWORD')
+    chunk_list = []
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+    with driver.session() as inner_session:
+        result = inner_session.run(input_data['query_string'], params)
+        for r in result:
+           chunk_list.append( (r['text'], r['page']))
 
-@app.route('/add_document', methods=['POST'])
-def add_document():
+    return jsonify(chunk_list)
+
+
+@app.route('/arbitrary_query', methods=['POST'])
+def arbitrary_query():
     # Get the JSON data sent in the request body
     input_data = request.get_json()
     
@@ -106,11 +128,14 @@ def add_chunk():
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
     password = os.getenv('NEO4J_PASSWORD')
-    embedding = input_data['embedding']
-  
     driver = GraphDatabase.driver(uri, auth=(username, password))
-    with driver.session() as inner_session:
-        inner_session.run(input_data['query_string'], embedding=embedding)
+    if 'embedding' in input_data:
+        embedding = input_data['embedding']
+        with driver.session() as inner_session:
+            inner_session.run(input_data['query_string'], embedding=embedding)
+    else:
+        with driver.session() as inner_session:
+            inner_session.run(input_data['query_string'])
 
     return jsonify('done')
 
