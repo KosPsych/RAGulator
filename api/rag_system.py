@@ -6,7 +6,6 @@ import requests
 from dotenv import load_dotenv
 from openai_acess import OpenAIModel
 
-# Ensure environment variables are loaded
 load_dotenv()
 
 class RAGSystem:
@@ -62,15 +61,20 @@ class RAGSystem:
             raise ValueError("No embedding returned from the deployed model.")
         return result
 
-    def get_chunks_from_api(self, query_string: str):
+    def get_chunks_from_api(self, query_string: str, query_embedding: list):
         """
         Send a request to retrieve document chunks based on the Cypher query.
         """
         headers = {'Content-Type': 'application/json'}
-        payload = {'query_string': query_string}
+        payload = {'query_string': query_string,
+                   'embedding': query_embedding}
+        # print ("QUERY STRING", query_string)
+        # print ("QUERY eMB", query_embedding)
+        # print ("QUERY PAY", payload)
         try:
             response = requests.get(self.get_chunks_url, headers=headers, json=payload)
             response.raise_for_status()
+            print(response.json())
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"Error communicating with API: {e}")
@@ -86,31 +90,32 @@ class RAGSystem:
         """
         query_embedding = self.get_embedding(query)
         cypher_query = f"""
-        MATCH (n:Chunk)
-        WITH n, gds.similarity.cosine(n.embedding, {query_embedding}) AS similarity
-        RETURN n.text AS text, n.page AS page
-        ORDER BY similarity DESC
+        MATCH (d:Document)-[:CONTAINS]->(c:Chunk)
+        WITH c, gds.similarity.cosine(c.embedding, $embedding) AS score
+        ORDER BY score DESC
+        WITH DISTINCT c, score
+        RETURN c.text AS text, c.page AS page
         LIMIT {top_k}
         """
-        return self.get_chunks_from_api(cypher_query)
+        return self.get_chunks_from_api(cypher_query, query_embedding[0])
 
-    def rag_query(self, query: str, session_id: str, n_chunks: int = 3):
+    def rag_query(self, query: str, session_id: str, n_chunks: int = 5):
         """
         Retrieve relevant document chunks, build a prompt using conversation history,
         and generate an answer using the OpenAI model.
         """
         conversation_history = self.format_history_for_prompt(session_id)
         chunks_data = self.retrieve_chunks_from_endpoint(query, top_k=n_chunks)
-
+        print(chunks_data)
         # Process the chunks data.
         chunks = []
         sources = []
         if chunks_data:
             for item in chunks_data:
-                if isinstance(item, dict):
-                    chunks.append(item.get("text", ""))
-                    sources.append(item.get("page", ""))
-        context = "\n\n".join(chunks)
+                chunks.append(item[0])
+                sources.append(item[0])
+        context = "".join(chunk for chunk in chunks)
+        
 
         prompt_message = f"""Based on the context provided below and the previous conversation,
 please answer the following question. If the answer is not in the context, refer to the conversation
@@ -138,7 +143,7 @@ Question:
         result = self.model.predict(inputs)
         self.add_message(session_id, "user", query)
         self.add_message(session_id, "assistant", result.get("response", ""))
-
+        print(prompt_message)
         return result.get("response", ""), sources
 
 
