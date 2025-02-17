@@ -1,5 +1,6 @@
 import json
 import requests
+import concurrent.futures
 
 class Retrieval():
     def __init__(self, top_k, english_query, greek_query, category, embedding_url, db_url):
@@ -145,22 +146,42 @@ class Retrieval():
         response = requests.get(url, headers=headers, json=data)
         return json.loads(response.text)
     
+    
+
     def retrieve(self):
         """
         Retrieve document chunks using both keyword-based and embedding-based methods,
-        for both Greek and English languages.
+        for both Greek and English languages, running requests in parallel.
         
         Returns:
             list: Combined list of retrieved document chunks
         """
-        greek_chunks = self.keyword_retieval(lang="gr", query=self.greek_query)
-        english_keyword_chunks = self.keyword_retieval(lang="en", query=self.english_query)
-        english_embedding_chunks = self.embedding_retrieval(lang="en")
+        # Define functions to execute concurrently
+        def get_greek_chunks():
+            return self.keyword_retieval(lang="gr", query=self.greek_query)
+        
+        def get_english_keyword_chunks():
+            return self.keyword_retieval(lang="en", query=self.english_query)
+        
+        def get_english_embedding_chunks():
+            return self.embedding_retrieval(lang="en")
+        
+        # Execute all requests in parallel using ThreadPoolExecutor
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_greek = executor.submit(get_greek_chunks)
+            future_english_keyword = executor.submit(get_english_keyword_chunks)
+            future_english_embedding = executor.submit(get_english_embedding_chunks)
+            
+            # Wait for all tasks to complete and get results
+            greek_chunks = future_greek.result()
+            english_keyword_chunks = future_english_keyword.result()
+            english_embedding_chunks = future_english_embedding.result()
         
         # Combine all results
         concat_chunks = greek_chunks + english_keyword_chunks + english_embedding_chunks
         return concat_chunks
    
-  
+retriever = Retrieval(1, 'Article', 'Επιτροπής', 'unknown', "https://embeddingmodel-emgsc9drgwefg0ea.francecentral-01.azurewebsites.net/embed", "https://codequestai-hnbxb5d2hfgnegav.francecentral-01.azurewebsites.net")
+print(retriever.retrieve())        
 
     
