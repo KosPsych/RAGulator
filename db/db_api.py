@@ -3,6 +3,8 @@ from neo4j import GraphDatabase
 import os
 app = Flask(__name__)
 import time
+import ast
+import json
 
 
 @app.route('/healthcheck', methods=['GET'])
@@ -34,7 +36,7 @@ def get_items():
     # Print the received input data
     print("Query_string:", input_data['query_string'])
     
-
+    embedding =input_data['embedding']
     # Connect to Neo4j
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
@@ -42,7 +44,7 @@ def get_items():
     chunk_list = []
     driver = GraphDatabase.driver(uri, auth=(username, password))
     with driver.session() as inner_session:
-        result =  inner_session.run(input_data['query_string'])
+        result =  inner_session.run(input_data['query_string'], embedding=embedding)
 
         for r in result:
            chunk_list.append( (r['text'], r['page']))
@@ -98,20 +100,17 @@ def add_document():
 @app.route('/add_chunk', methods=['POST'])
 def add_chunk():
     # Get the JSON data sent in the request body
-    input_data = request.get_json()
-    
-    # Print the received input data
-    print("Query_string:", input_data['query_string'])
-    
+    input_data = request.get_json()   
 
     # Connect to Neo4j
     uri = "neo4j://localhost:7687"
     username = 'neo4j'
     password = os.getenv('NEO4J_PASSWORD')
-    
+    embedding = input_data['embedding']
+  
     driver = GraphDatabase.driver(uri, auth=(username, password))
     with driver.session() as inner_session:
-        inner_session.run(input_data['query_string'])
+        inner_session.run(input_data['query_string'], embedding=embedding)
 
     return jsonify('done')
 
