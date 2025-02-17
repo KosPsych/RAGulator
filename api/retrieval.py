@@ -181,7 +181,6 @@ class Retrieval():
         concat_chunks = greek_chunks + english_keyword_chunks + english_embedding_chunks
         return concat_chunks
    
-retriever = Retrieval(1, 'Article', 'Επιτροπής', 'unknown', "https://embeddingmodel-emgsc9drgwefg0ea.francecentral-01.azurewebsites.net/embed", "https://codequestai-hnbxb5d2hfgnegav.francecentral-01.azurewebsites.net")
-print(retriever.retrieve())        
+   
 
     
