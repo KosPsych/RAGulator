@@ -47,7 +47,7 @@ def get_items():
         result =  inner_session.run(input_data['query_string'], embedding=embedding)
 
         for r in result:
-           chunk_list.append( (r['text'], r['page']))
+           chunk_list.append( (r['text'], r['page'], r['name']))
    
     return jsonify(chunk_list)
 
@@ -94,7 +94,7 @@ def keyword_search():
     with driver.session() as inner_session:
         result = inner_session.run(input_data['query_string'], params)
         for r in result:
-           chunk_list.append( (r['text'], r['page']))
+           chunk_list.append( (r['text'], r['page'], r['name']))
 
     return jsonify(chunk_list)
 
