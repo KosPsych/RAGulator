@@ -30,15 +30,6 @@ class Retrieval():
         """
         url = self.embedding_url
         payload = {"text": [text]}
-        from transformers import AutoTokenizer
-
-            # Initialize tokenizer (e.g., using BERT model)
-        tokenizer = AutoTokenizer.from_pretrained("avsolatorio/GIST-Embedding-v0")
-
-            
-
-        
-        tokens = tokenizer.encode(text, add_special_tokens=False)
     
         response = requests.post(url, json=payload)
         response.raise_for_status()
