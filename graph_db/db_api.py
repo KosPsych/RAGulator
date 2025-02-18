@@ -33,8 +33,7 @@ def get_items():
     # Get the JSON data sent in the request body
     input_data = request.get_json()
     
-    # Print the received input data
-    print("Query_string:", input_data['query_string'])
+
     
     embedding =input_data['embedding']
     # Connect to Neo4j
@@ -47,8 +46,7 @@ def get_items():
         result =  inner_session.run(input_data['query_string'], embedding=embedding)
 
         for r in result:
-           chunk_list.append( (r['text'], r['page'], r['name']))
-   
+           chunk_list.append( (r['text'], r['page'], r['name'], r['base64'], r['score']))  
     return jsonify(chunk_list)
 
 
@@ -94,7 +92,7 @@ def keyword_search():
     with driver.session() as inner_session:
         result = inner_session.run(input_data['query_string'], params)
         for r in result:
-           chunk_list.append( (r['text'], r['page'], r['name']))
+           chunk_list.append( (r['text'], r['page'], r['name'], r['base64'], r['score']))
 
     return jsonify(chunk_list)
 

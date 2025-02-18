@@ -81,7 +81,7 @@ class Retrieval():
         query_string_part2 = f'''
         ORDER BY score DESC
         WITH DISTINCT c, score
-        RETURN c.text AS text, c.page AS page, d.name AS name
+        RETURN c.text AS text, c.page AS page, c.base64 AS base64, d.name AS name, score
         LIMIT {self.top_k}
         '''
         
@@ -127,7 +127,7 @@ class Retrieval():
         
         # Order results and apply limit
         query_string_part3 = f'''
-        RETURN node.text AS text, node.page, AS page, d.name AS name, score
+        RETURN node.text AS text, node.page, node.base64 AS base64, AS page, d.name AS name, score
         ORDER BY score DESC
         LIMIT {self.top_k}'''
         
