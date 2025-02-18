@@ -169,11 +169,18 @@ class Retrieval():
             greek_chunks = future_greek.result()
             english_keyword_chunks = future_english_keyword.result()
             english_embedding_chunks = future_english_embedding.result()
-        
+
+        greek_chunks = [{'document': result[0], 'pg_number': result[1], 'pdf_name': result[2], 'img': result[3], 'score': result[4]} for result in greek_chunks]
+        deduplicated = {result[0]: [result[1], result[2], result[3], result[4]] for result in english_keyword_chunks}
+        for result in english_embedding_chunks:
+            deduplicated[result[0]] = [result[1], result[2], result[3], result[4]]
+
+        english_chunks = [{'document': key, 'pg_number': result[0], 'pdf_name': result[1], 'img': result[2], 'score': result[3]} for key, result in deduplicated.items()]
+
+
         result_dict = [
-            {"query":self.greek_query, "greek_keyword_chunks": greek_chunks},
-            {"query":self.english_query, "english_keyword_chunks": english_keyword_chunks},
-            {"query":self.english_query, "english_embedding_chunks": english_embedding_chunks}
+            {"query":self.greek_query, "chunks": greek_chunks},
+            {"query":self.english_query, "chunks": english_chunks}
         ]
         
         return result_dict
