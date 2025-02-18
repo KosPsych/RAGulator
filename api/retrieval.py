@@ -170,8 +170,12 @@ class Retrieval():
             english_keyword_chunks = future_english_keyword.result()
             english_embedding_chunks = future_english_embedding.result()
         
-        # Combine all results
-        concat_chunks = greek_chunks + english_keyword_chunks + english_embedding_chunks
-        return concat_chunks
+        result_dict = [
+            {"query":self.greek_query, "greek_keyword_chunks": greek_chunks},
+            {"query":self.english_query, "english_keyword_chunks": english_keyword_chunks},
+            {"query":self.english_query, "english_embedding_chunks": english_embedding_chunks}
+        ]
+        
+        return result_dict
 
-   
+
