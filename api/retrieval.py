@@ -67,20 +67,20 @@ class Retrieval():
         # Base query to find chunks and calculate cosine similarity
         query_string_part1 = '''MATCH (d:Document)-[:CONTAINS]->(c:Chunk)
         WHERE c.embedding IS NOT NULL
-        WITH c, gds.similarity.cosine(c.embedding, $embedding) AS score \n'''
+        WITH c, d, gds.similarity.cosine(c.embedding, $embedding) AS score \n'''
         
         # Add filter based on category
         if self.category != 'unknown':
-            where_clause = f'''WHERE d.tag = "{self.category}" AND d.language = "{lang}"'''
+            where_clause = f''' WHERE d.tag = "{self.category}" AND d.language = "{lang}"'''
         else:
-            where_clause = f'''WHERE d.language = "{lang}"'''
+            where_clause = f''' WHERE d.language = "{lang}"'''
             
         query_string = query_string_part1 + where_clause
         
         # Order results and apply limit
         query_string_part2 = f'''
         ORDER BY score DESC
-        WITH DISTINCT c, score
+        WITH DISTINCT c, d,  score
         RETURN c.text AS text, c.page AS page, c.base64 AS base64, d.name AS name, score
         LIMIT {self.top_k}
         '''
@@ -96,8 +96,9 @@ class Retrieval():
             "query_string": query_string,
             "embedding": emb
         }
-        
+    
         response = requests.get(url, headers=headers, json=data)
+      
         return json.loads(response.text)
         
 
@@ -115,7 +116,7 @@ class Retrieval():
         """
         # Base query using fulltext index
         query_string_part1 = '''CALL db.index.fulltext.queryNodes("keyword_search", $query) YIELD node, score
-        MATCH (d:Document)-[:CONTAINS]->(node:Chunk)'''
+        MATCH (d:Document)-[:CONTAINS]->(node:Chunk)\n'''
         
         # Add filter based on category
         if self.category != 'unknown':
@@ -127,7 +128,7 @@ class Retrieval():
         
         # Order results and apply limit
         query_string_part3 = f'''
-        RETURN node.text AS text, node.page, node.base64 AS base64, AS page, d.name AS name, score
+        RETURN node.text AS text, node.page AS page, node.base64 AS base64, d.name AS name, score
         ORDER BY score DESC
         LIMIT {self.top_k}'''
         
@@ -144,6 +145,7 @@ class Retrieval():
         }
         
         response = requests.get(url, headers=headers, json=data)
+        
         return json.loads(response.text)
     
     
@@ -180,7 +182,5 @@ class Retrieval():
         # Combine all results
         concat_chunks = greek_chunks + english_keyword_chunks + english_embedding_chunks
         return concat_chunks
-   
-   
 
-    
+   
