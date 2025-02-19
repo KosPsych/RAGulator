@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
 from dotenv import load_dotenv
-from response import Response
+# from response import Response
+from reranking import rerank
 
 # Load environment variables from .env
 load_dotenv()
@@ -72,16 +73,20 @@ def generate_response(data: GenerateResponseInput):
             "error": str(e),
             "category": category,
         }
+    
+    reranked_results = rerank(retrieved_results)
 
-    session_id = response.create_session()
-    final_answer, used_sources = response.rag_query_with_chunks(
-        query=data.query,
-        session_id=session_id,
-        chunks_data=retrieved_results   
-    )
+    return reranked_results
 
-    return {
-        "category": category,
-        "final_answer": final_answer,
-        "used_sources": used_sources
-    }
+    # session_id = response.create_session()
+    # final_answer, used_sources = response.rag_query_with_chunks(
+    #     query=data.query,
+    #     session_id=session_id,
+    #     chunks_data=retrieved_results   
+    # )
+
+    # return {
+    #     "category": category,
+    #     "final_answer": final_answer,
+    #     "used_sources": used_sources
+    # }
