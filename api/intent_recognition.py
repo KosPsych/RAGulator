@@ -37,11 +37,11 @@ class IntentRecognizer:
             },
             {
                 "question": "Μπορεί ένα CSD που ανήκει σε όμιλο να δανείζεται Chief Auditor από τη μητρική εταιρεία και υπό ποιες προϋποθέσεις;",
-                "answer": "CSDR"
+                "answer": "csdr"
             },
             {
                 "question": "What information regarding the CSD's activities and services should be included in the application for authorization?",
-                "answer": "CSDR"
+                "answer": "csdr"
             }
         ]
 
@@ -63,7 +63,7 @@ class IntentRecognizer:
     def classify_and_translate(self, question: str) -> dict:
         """
         1) Classify the question into one of the categories:
-           'exchange_regulation', 'esma', 'emir', 'CSDR', or 'unknown'.
+           'exchange_regulation', 'esma', 'emir', 'csdr', or 'unknown'.
         2) Detect if the question is in Greek or English (or unknown).
         3) If Greek, translate to English; if English, translate to Greek; otherwise, 'unknown'.
 
@@ -82,7 +82,7 @@ class IntentRecognizer:
                     "content": (
                         "You are an assistant specialized in query classification and simple language detection.\n\n"
                         "TASK 1: Classify the user's question into: "
-                        "\"exchange_regulation\", \"esma\", \"emir\", \"CSDR\", or \"unknown\" if unsure.\n\n"
+                        "\"exchange_regulation\", \"esma\", \"emir\", \"csdr\", or \"unknown\" if unsure.\n\n"
                         "TASK 2: Detect if the question is in English or Greek. If not sure, return \"unknown\".\n\n"
                         "TASK 3: If the question is in Greek, translate it to English. If the question is in English, "
                         "translate it to Greek. If you are not sure or it's another language, use \"unknown\".\n\n"

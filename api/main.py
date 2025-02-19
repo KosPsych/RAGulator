@@ -15,7 +15,7 @@ OPENAI_API_URL = os.getenv("OPENAI_API_URL")
 OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME")
 OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION")
 EMBEDDING_URL = os.getenv("EMBEDDING_URL")
-GET_CHUNKS_URL = os.getenv("GET_CHUNKS_URL")
+DB_URL = os.getenv("DB_URL")
 
 
 from intent_recognition import IntentRecognizer
@@ -62,7 +62,7 @@ def generate_response(data: GenerateResponseInput):
         greek_query=greek_query,
         category=category,
         embedding_url=EMBEDDING_URL,
-        db_url=GET_CHUNKS_URL
+        db_url=DB_URL
     )
 
     try:
