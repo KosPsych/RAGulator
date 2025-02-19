@@ -134,9 +134,9 @@ class Retrieval():
             "query_string": query_string,
             "query": query
         }
-        
+
         response = requests.get(url, headers=headers, json=data)
-        
+
         return json.loads(response.text)
     
     

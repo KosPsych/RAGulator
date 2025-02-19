@@ -33,7 +33,11 @@ def rerank(retrieved_results):
         )
     
     all_prompts = []
-    for res in retrieved_results:
+    missing={0:False,1:False}
+    for idx, res in enumerate(retrieved_results):
+        if len(res['chunks']) == 0:
+            missing[idx] = True
+            continue
         query = res['query']
         doc_string = "".join(f"<document-{idx}>\n" + document['document'] + f"</document-{idx}>\n" for idx, document in enumerate(res['chunks']))
 
@@ -49,15 +53,21 @@ def rerank(retrieved_results):
         all_prompts.append(inputs)
 
     responses = asyncio.run(run_concurrent_calls())
-
+    if missing[0]:
+        responses = [None,responses[0]]
+    elif missing[1]:
+        responses.append(None)
+        
     threshold = 6
     all_chunks = []
     for i, response in enumerate(responses):
+        if not response:
+            continue
         match = re.search(r'<result>(.*?)<\/result>', response)
         match = match.group(1)
         ranked_results_idx = eval(match)
-        print(ranked_results_idx, len(ranked_results_idx), len(retrieved_results[i]['chunks']))
-        all_chunks_tmp = [retrieved_results[i]['chunks'][idx] for idx, k in enumerate(ranked_results_idx) if k >= threshold]
+        print(ranked_results_idx, len(retrieved_results[i]["chunks"]))
+        all_chunks_tmp = [retrieved_results[i]['chunks'][idx] for idx, k in enumerate(ranked_results_idx) if k >= threshold and len(retrieved_results[i]["chunks"])>0]
         all_chunks += all_chunks_tmp
 
     return all_chunks

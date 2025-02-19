@@ -27,7 +27,6 @@ app = FastAPI()
 
 
 intent_recognizer = IntentRecognizer()
-response = Response()
 
 class GenerateResponseInput(BaseModel):
     query: str
