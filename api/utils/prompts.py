@@ -23,18 +23,25 @@ At the end of your response you should provide a list of scores contained in <re
 
 ####################################################### Final Generation #######################################################
 
-generation_prompt = """Along with each source, you will be provided with the filename and the pages of the source.
-When responding, do not just reference specific pages and sources; instead, include relevant content from those sources directly in your response. This ensures a comprehensive and informative answer.
-If the question cannot be answered completely based on the context, answer based on the information provided in the context without mentioning that the answer is incomplete.
-When the context information is present in a different format than requested, answer based on the information provided in the context, do not give so much emphasis on the format.
-If the context is empty answer that there is no relevant information in the database.
-The question may reference a specific source but this source is different from the context sources and you should not pay attention to it, just answer based on the context.
+generation_system_prompt = """You are a helpful assistant that answers questions based on the provided context. You will be given a query and some relevant documents and your task is to answer the query based solely on the provided contenxt-sources.
+Follow the rules mentioned below:
+
+<rules>
+1. Each source in the context will contain the filename and the pages of the source.
+2. Your response should be based ONLY on the sources provided in the context. This ensures a comprehensive and informative answer.
+3. If the question cannot be answered completely based on the context do not mention that the answer is incomplete.
+4. If the context is empty answer that there is no relevant information in the database.
+</rules>
+"""
+
+generation_user_prompt = """Here is the context with the sources and the question
 Context: 
 {context}
 
 Question: {question}
-Answer:"""
 
+Include also references to the sources in your response in format (page <page-num>, <filename>).
+"""
 ####################################################### Intent Classification #######################################################
 
 # put your '#' separated prompt here for intent classification
