@@ -12,7 +12,7 @@ load_dotenv()
 
 # Retrieve environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_API_URL = os.getenv("OPENAI_API_URL")
+OPENAI_API_URL = os.getenv("OPENAI_API_URL", "")
 OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME")
 OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION")
 EMBEDDING_URL = os.getenv("EMBEDDING_URL")
@@ -40,6 +40,8 @@ def generate_response(data: GenerateResponseInput):
     3) Pass everything to the RAG system (Response) to generate a final answer.
     4) Return final answer + sources.
     """
+    print("OPENAI_API_URL: ", OPENAI_API_URL)
+    print("OPENAI_API_KEY: ", OPENAI_API_KEY)
 
     classification_result = intent_recognizer.classify_and_translate(data.query)
     category = classification_result["category"]
