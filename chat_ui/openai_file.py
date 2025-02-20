@@ -20,7 +20,7 @@ client = AzureOpenAI(
     api_version=api_version
 )
 
-def get_azure_openai_response_stream(query: str, chat_history: List[Dict[str, str]] = None) -> Generator[str, None, None]:
+def get_azure_openai_response_stream(system_prompt, user_prompt: str, chat_history: List[Dict[str, str]] = None) -> Generator[str, None, None]:
     """
     Get streaming response from Azure OpenAI.
     
@@ -33,24 +33,20 @@ def get_azure_openai_response_stream(query: str, chat_history: List[Dict[str, st
     """
     try:
         # Prepare messages for the API call
-        messages = [{"role": "user", "content": query}]
+        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
         
         # Add chat history for context if available
-        if chat_history:
-            # Convert chat history to the format expected by OpenAI
-            for chat in chat_history[-3:]:  # Use last 3 exchanges for context
-                messages.insert(0, {"role": "user", "content": chat["query"]})
-                messages.insert(1, {"role": "assistant", "content": chat["response"]})
+        # if chat_history:
+        #     # Convert chat history to the format expected by OpenAI
+        #     for chat in chat_history[-3:]:  # Use last 3 exchanges for context
+        #         messages.insert(0, {"role": "user", "content": chat["query"]})
+        #         messages.insert(1, {"role": "assistant", "content": chat["response"]})
         
         # Call Azure OpenAI API with streaming enabled
         response = client.chat.completions.create(
             model=model_deployment_name,
             messages=messages,
-            temperature=0.7,
-            max_tokens=800,
-            top_p=0.95,
-            frequency_penalty=0,
-            presence_penalty=0,
+            temperature=0,
             stream=True  # Enable streaming
         )
         
