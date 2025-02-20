@@ -1,11 +1,13 @@
 import streamlit as st
 import re
 import base64
+import os
 from io import BytesIO
+import requests
+import json
 from PIL import Image
 from openai_file import get_azure_openai_response_stream
-# from main import generate_response, GenerateResponseInput
-# from utils.prompts import generation_system_prompt, generation_user_prompt
+from utils.prompts import generation_system_prompt, generation_user_prompt
 from typing import List, Tuple
 from streamlit_float import *
 
@@ -14,9 +16,24 @@ def create_response_prompt(query, retr_results):
 
     return generation_system_prompt, generation_user_prompt.format(context=documents, question=query)
 
+# def retrieve_documents(query, top_k=5):
+#     obj = GenerateResponseInput(query=query, top_k=top_k)
+#     return generate_response(obj)
+
 def retrieve_documents(query, top_k=5):
-    obj = GenerateResponseInput(query=query, top_k=top_k)
-    return generate_response(obj)
+    url = os.getenv("OPENAI_API_URL")
+
+    headers = {
+        'accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'query': query,
+        'top_k': top_k
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    return response.json()
+    
 
 # print(retrieve_documents(query="ensure that investors' rights are protected"))
 
