@@ -21,7 +21,7 @@ def create_response_prompt(query, retr_results):
 #     return generate_response(obj)
 
 def retrieve_documents(query, top_k=5):
-    url = os.getenv("OPENAI_API_URL")
+    url = os.getenv("RETRIEVE_URL")
 
     headers = {
         'accept': 'application/json',

@@ -9,7 +9,7 @@ WORKDIR /app
 
 # This runs pip install for all the packages listed in your requirements.txt file.
 # streamlit==1.41.1
-RUN pip install streamlit==1.41.1 openai==1.63.0 python-dotenv==1.0.1
+RUN pip install streamlit==1.41.1 streamlit-float==0.3.5 openai==1.63.0 python-dotenv==1.0.1
 
 # This tells Docker to listen on port 80 at runtime. Port 80 is the standard port for HTTP.
 EXPOSE 8501
