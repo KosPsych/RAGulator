@@ -5,6 +5,8 @@ import re
 
 
 def rephrase(chat_history, query):
+    if chat_history == []:
+        return query
     # Reverse the chat history
     chat_hist_str = ''
     for idx, item in enumerate(chat_history):

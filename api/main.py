@@ -69,4 +69,4 @@ def generate_response(data: GenerateResponseInput):
         }
     
     reranked_results = rerank(retrieved_results)
-
+    return reranked_results
