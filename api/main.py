@@ -2,21 +2,13 @@ import os
 import json
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict
 from dotenv import load_dotenv
-# from response import Response
+
 from reranking import rerank
+from utils.constants import *
+from rephrase import rephrase
 
-# Load environment variables from .env
-load_dotenv()
-
-# Retrieve environment variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_API_URL = os.getenv("OPENAI_API_URL", "")
-OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME")
-OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION")
-EMBEDDING_URL = os.getenv("EMBEDDING_URL")
-DB_URL = os.getenv("DB_URL")
 
 
 from intent_recognition import IntentRecognizer
@@ -30,7 +22,8 @@ intent_recognizer = IntentRecognizer()
 
 class GenerateResponseInput(BaseModel):
     query: str
-    top_k: Optional[int] = 5  
+    top_k: Optional[int] = 5 ,
+    chat_history: List[Dict[str, str]] = []
 
 @app.post("/generate_response")
 def generate_response(data: GenerateResponseInput):
@@ -40,24 +33,24 @@ def generate_response(data: GenerateResponseInput):
     3) Pass everything to the RAG system (Response) to generate a final answer.
     4) Return final answer + sources.
     """
-    print("OPENAI_API_URL: ", OPENAI_API_URL)
-    print("OPENAI_API_KEY: ", OPENAI_API_KEY)
-
-    classification_result = intent_recognizer.classify_and_translate(data.query)
+    chat_history = data.chat_history
+    rephrased_query = rephrase(chat_history, data.query)
+  
+    classification_result = intent_recognizer.classify_and_translate(rephrased_query)
     category = classification_result["category"]
     translation = classification_result["translation"]
     language = classification_result["language"] 
 
     if language == "english":
-        english_query = data.query
+        english_query = rephrased_query
         greek_query = translation
     elif language == "greek":
         english_query = translation
-        greek_query = data.query
+        greek_query = rephrased_query
     else:
-        english_query = data.query
+        english_query = rephrased_query
         greek_query = "unknown"
-
+    
     retrieval_instance = Retrieval(
         top_k=data.top_k,
         english_query=english_query,
@@ -76,18 +69,4 @@ def generate_response(data: GenerateResponseInput):
         }
     
     reranked_results = rerank(retrieved_results)
-
     return reranked_results
-
-    # session_id = response.create_session()
-    # final_answer, used_sources = response.rag_query_with_chunks(
-    #     query=data.query,
-    #     session_id=session_id,
-    #     chunks_data=retrieved_results   
-    # )
-
-    # return {
-    #     "category": category,
-    #     "final_answer": final_answer,
-    #     "used_sources": used_sources
-    # }

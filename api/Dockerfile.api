@@ -2,7 +2,7 @@ FROM python:3.12.9
 
 WORKDIR /app
 
-COPY main.py intent_recognition.py openai_acess.py reranking.py retrieval.py ./
+COPY main.py intent_recognition.py openai_acess.py reranking.py retrieval.py rephrase.py ./
 COPY utils/ ./utils/
 
 COPY requirements.txt .

@@ -1,6 +1,7 @@
 import json
 import requests
 import concurrent.futures
+from colorama import Fore
 
 class Retrieval():
     def __init__(self, top_k, english_query, greek_query, category, embedding_url, db_url):
@@ -183,6 +184,14 @@ class Retrieval():
             {"query":self.english_query, "chunks": english_chunks}
         ]
         
+        print(Fore.BLUE +'ENGLISH CHUNKS')
+        for chunk in english_chunks:
+            print(chunk['pdf_name'], chunk['pg_number'], chunk['score'])
+        print('-'*30)
+        print(Fore.BLUE +'GREEK CHUNKS')
+        for chunk in greek_chunks:
+            print(chunk['pdf_name'], chunk['pg_number'], chunk['score'])
+        print('-'*30)
         return result_dict
 
 
