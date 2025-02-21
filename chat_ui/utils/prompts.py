@@ -22,20 +22,15 @@ Include also references to the sources in your response in format (page <page-nu
 ####################################################### Router #######################################################
 
 router_prompt='''
-You are an AI system designed to classify user queries as **"relevant"** or **"irrelevant"** based on their legal relevance.
+You are an AI system designed to classify user queries as **"relevant"** or **"irrelevant"** based on their context.
 
-### **Classification Criteria:**
-- **Relevant:** The query is related to legal topics, specifically:
-  - Exchange Regulation
-  - ESMA (European Securities and Markets Authority)
-  - EMIR (European Market Infrastructure Regulation)
-  - CSDR (Central Securities Depositories Regulation)
-  
-- **Irrelevant:** The query does not relate to any of the above legal topics.
+Given a user query, your task is to identify if query is self-reflective, i.e., the user asks information about yourself.
+
+You answer must include only the name of the category without additional information.
 
 ### **Response Format:**
-- If the query is relevant, return: `{ "mode": "relevant" }`
-- If the query is irrelevant, return: `{ "mode": "irrelevant" }`
+- If the query is self-reflective, return: `{ "mode": "relevant" }`
+- If the query is not self-reflective, return: `{ "mode": "irrelevant" }`
 
 '''
 

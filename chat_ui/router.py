@@ -29,14 +29,17 @@ def Router(user_query: str):
     response = model.predict(inputs)
 
     formated_response= json.loads(response["response"])
+
+    print(formated_response)
+
     if formated_response["mode"]=='relevant':
-        return [True, None, None]
-    else:
         return [False, persona_prompt, user_query] 
+    else:
+        return [True, None, None]
 
-# user_message = "How are you?"
+user_message = "What time is it?"
 
 
-# x = Router(user_message)
+x = Router(user_message)
 
-# print(x)
+#print(x)

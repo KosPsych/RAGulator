@@ -33,6 +33,9 @@ def generate_response(data: GenerateResponseInput):
     3) Pass everything to the RAG system (Response) to generate a final answer.
     4) Return final answer + sources.
     """
+    print("="*100)
+    print(data.query)
+    print("="*100)
     chat_history = data.chat_history
     rephrased_query = rephrase(chat_history, data.query)
   

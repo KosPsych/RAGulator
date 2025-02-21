@@ -59,6 +59,13 @@ def rerank(retrieved_results):
         all_prompts.append(inputs)
 
     responses = asyncio.run(run_concurrent_calls())
+    if len(responses)==0:
+        print()
+        print()
+        print(Fore.RED +'RERANKING OPENAI EMPTY LIST')
+        print()
+        print()
+        return []
     if missing[0]:
         responses = [None,responses[0]]
         print()
