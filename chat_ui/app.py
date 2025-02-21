@@ -10,6 +10,7 @@ from openai_file import get_azure_openai_response_stream
 from utils.prompts import generation_system_prompt, generation_user_prompt
 from typing import List, Tuple
 from streamlit_float import *
+from router import Router
 
 def create_response_prompt(query, retr_results):
     documents = "".join(f"<document-{idx}>\nSource: page {i['pg_number']} of {i['pdf_name']}\n{i['document']}</document-{idx}>" for idx, i in enumerate(retr_results))
@@ -30,7 +31,6 @@ def retrieve_documents(query, top_k=5, chat_history=[]):
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
 
-    print(response.json())
     return response.json()
     
 
@@ -68,11 +68,11 @@ def main():
     # col_chat, col_images = st.columns(2)
     
     with col_chat:
-        st.title("RAG Chat Interface")
+        # st.title("RAG Chat Interface")
 
-        # col_name, col_session = st.columns([1.7, 1], vertical_alignment="bottom")
-        # with col_name: st.title("RAG Chat Interface")
-        # with col_session: st.button("New Session")
+        col_name, col_session = st.columns([4, 1], vertical_alignment="bottom")
+        with col_name: st.title("ATHEX AI Nexus")
+        with col_session: st.button("New Session", use_container_width=True)
         
         chat_input_container = st.container(height=700)
         with chat_input_container:
@@ -92,11 +92,16 @@ def main():
                         full_response = ""
                         
                         try:
-                            with st.spinner("Retrieving information..."):
-                                st.session_state.image_list = []
-                                chat_history_api = [{"question": i['query'], "answer": i['response']} for i in st.session_state.chat_history]
-                                retrieval_results = retrieve_documents(prompt, 3, chat_history_api)
-                                s_prompt, u_prompt = create_response_prompt(prompt, retrieval_results)
+                            with st.spinner("Thinking..."):
+                                do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt)
+                            if do_retrieve:
+                                with st.spinner("Retrieving information..."):
+                                    st.session_state.image_list = []
+                                    chat_history_api = [{"question": i['query'], "answer": i['response']} for i in st.session_state.chat_history]
+                                    retrieval_results = retrieve_documents(prompt, 3, chat_history_api)
+                                    s_prompt, u_prompt = create_response_prompt(prompt, retrieval_results)
+                            else:
+                                s_prompt, u_prompt = self_sym_prompt, self_user_prompt
                             for response_chunk in get_azure_openai_response_stream(s_prompt, u_prompt, st.session_state.chat_history):
                                 full_response += response_chunk
                                 message_placeholder.markdown(full_response + "▌")
@@ -105,10 +110,11 @@ def main():
                             st.session_state.messages.append({"role": "assistant", "content": full_response})
                             st.session_state.chat_history.append({"query": prompt, "response": full_response})
                             
-                            references = extract_image_references(retrieval_results)
-                            for ref, image_data in references:
-                                if not any(existing_ref == ref for existing_ref, _ in st.session_state.image_list):
-                                    st.session_state.image_list.append((ref, image_data))
+                            if do_retrieve:
+                                references = extract_image_references(retrieval_results)
+                                for ref, image_data in references:
+                                    if not any(existing_ref == ref for existing_ref, _ in st.session_state.image_list):
+                                        st.session_state.image_list.append((ref, image_data))
 
                             # with history: display_chat_messages()
                             

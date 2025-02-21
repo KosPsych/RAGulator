@@ -18,7 +18,6 @@ Context:
 Question: {question}
 
 Include also references to the sources in your response in format (page <page-num>, <filename>).
-<<<<<<< HEAD
 """
 ####################################################### Router #######################################################
 
@@ -62,6 +61,3 @@ Your goal is to ensure that all responses are accurate, legally compliant, and w
 s are accurate, legally compliant, and within the scope of financial regulations.
 
 '''
-=======
-"""
->>>>>>> 7fcc2af4958346b62bf78221e7c519db85c07b8e

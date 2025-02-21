@@ -30,9 +30,9 @@ def Router(user_query: str):
 
     formated_response= json.loads(response["response"])
     if formated_response["mode"]=='relevant':
-        return ['1', None, None]
+        return [True, None, None]
     else:
-        return ['0', persona_prompt, user_query] 
+        return [False, persona_prompt, user_query] 
 
 # user_message = "How are you?"
 
