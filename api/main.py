@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 from dotenv import load_dotenv
-# from response import Response
+
 from reranking import rerank
 from utils.constants import *
 from rephrase import rephrase

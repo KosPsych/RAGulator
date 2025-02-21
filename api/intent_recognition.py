@@ -2,8 +2,6 @@ import os
 import json
 from dotenv import load_dotenv
 from openai_acess import OpenAIModel
-from langchain_core.prompts.few_shot import FewShotPromptTemplate
-from langchain_core.prompts.prompt import PromptTemplate
 from utils.prompts import intent_classification_system_prompt, intent_classification_user_prompt
 load_dotenv()
 from colorama import Fore
