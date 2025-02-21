@@ -16,11 +16,7 @@ def create_response_prompt(query, retr_results):
 
     return generation_system_prompt, generation_user_prompt.format(context=documents, question=query)
 
-# def retrieve_documents(query, top_k=5):
-#     obj = GenerateResponseInput(query=query, top_k=top_k)
-#     return generate_response(obj)
-
-def retrieve_documents(query, top_k=5):
+def retrieve_documents(query, top_k=5, chat_history=[]):
     url = os.getenv("RETRIEVE_URL")
 
     headers = {
@@ -29,9 +25,12 @@ def retrieve_documents(query, top_k=5):
     }
     data = {
         'query': query,
-        'top_k': top_k
+        'top_k': top_k,
+        'chat_history': chat_history
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
+
+    print(response.json())
     return response.json()
     
 
@@ -47,12 +46,6 @@ def initialize_session_state():
         st.session_state.image_list = []
     if "current_image_index" not in st.session_state:
         st.session_state.current_image_index = 0
-
-# def extract_image_references(message: str):
-#     """Extract image references from a message."""
-#     pattern = r'\[(.*?)\]'
-#     references = re.findall(pattern, message)
-#     return [(ref, get_sample_image_base64()) for ref in references]
 
 def extract_image_references(retr_results: List):
     """Extract image references from a message."""
@@ -76,6 +69,10 @@ def main():
     
     with col_chat:
         st.title("RAG Chat Interface")
+
+        # col_name, col_session = st.columns([1.7, 1], vertical_alignment="bottom")
+        # with col_name: st.title("RAG Chat Interface")
+        # with col_session: st.button("New Session")
         
         chat_input_container = st.container(height=700)
         with chat_input_container:
@@ -97,7 +94,8 @@ def main():
                         try:
                             with st.spinner("Retrieving information..."):
                                 st.session_state.image_list = []
-                                retrieval_results = retrieve_documents(prompt, 3)
+                                chat_history_api = [{"question": i['query'], "answer": i['response']} for i in st.session_state.chat_history]
+                                retrieval_results = retrieve_documents(prompt, 3, chat_history_api)
                                 s_prompt, u_prompt = create_response_prompt(prompt, retrieval_results)
                             for response_chunk in get_azure_openai_response_stream(s_prompt, u_prompt, st.session_state.chat_history):
                                 full_response += response_chunk
