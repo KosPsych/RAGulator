@@ -56,3 +56,16 @@ Your goal is to ensure that all responses are accurate, legally compliant, and w
 s are accurate, legally compliant, and within the scope of financial regulations.
 
 '''
+####################################################### Get title #######################################################
+
+title_system_prompt = """You are a text specialist. Given a question your task is to create a maximum of 5 word phrase in the same language of the query that can describe the question in high level. Keep it simple."""
+
+title_user_prompt = """Here are some examples:
+query: Γεια σου
+answer: Χαιρετισμός
+
+query: When a derivative contract is cleared by an entity which is not a CCP within the meaning of EMIR (e.g. a clearing house), should the clearing house be identified in the field “CCP ID”?
+answer: GCP ID Reporting EMIR
+
+query: {query}
+answer: """
