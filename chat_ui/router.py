@@ -7,19 +7,28 @@ load_dotenv()
 
 model = OpenAIModel()
 
-def Router(user_query: str):
+def Router(user_query: str, history):
     model = OpenAIModel()
-    inputs = {
-        'messages': [
+
+    messages = [
             {
                 "role": "system",
                 "content": router_prompt
-            },
-            {
+            }]
+
+    if history:
+            # Convert chat history to the format expected by OpenAI
+        for chat in history:
+            messages.append({"role": "user", "content": chat["query"]})
+            messages.append({"role": "assistant", "content": chat["response"]})
+
+    messages.append({
                 "role": "user",
                 "content": user_query
-            }
-        ],
+            })
+    
+    inputs = {
+        'messages': messages,
         'params': {
             'temperature': 0.0,
             'max_tokens': 200
@@ -37,9 +46,9 @@ def Router(user_query: str):
     else:
         return [True, None, None]
 
-user_message = "What time is it?"
+# user_message = "What time is it?"
 
 
-x = Router(user_message)
+# x = Router(user_message)
 
 #print(x)

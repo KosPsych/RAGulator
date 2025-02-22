@@ -198,7 +198,9 @@ def main():
             top_k_selected = st.selectbox("Top_k (for debugging only)", list(range(1, 21)))
         with col_new_conv:
             if st.button("New Session", key="new_conv", use_container_width=True):
-                pass
+                create_new_conversation()
+                st.session_state.initial = True
+                st.rerun()
 
         chat_input_container = st.container(height=650)
         with chat_input_container:
@@ -220,7 +222,7 @@ def main():
                         
                         try:
                             with st.spinner("Thinking..."):
-                                do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt)
+                                do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt, st.session_state.chat_history)
                             if do_retrieve:
                                 with st.spinner(f"Retrieving information with {top_k_selected} chunks.."):
                                     st.session_state.image_list = []
@@ -289,7 +291,7 @@ def main():
                             
                             try:
                                 with st.spinner("Thinking..."):
-                                    do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt)
+                                    do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt, st.session_state.chat_history)
                                 if do_retrieve:
                                     with st.spinner(f"Retrieving information with {top_k_selected} chunks.."):
                                         st.session_state.image_list = []
