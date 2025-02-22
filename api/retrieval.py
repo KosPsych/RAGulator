@@ -70,12 +70,13 @@ class Retrieval():
         query_string = query_string_part1 + where_clause
         
         # Order results and apply limit
-        query_string_part2 = f'''
+        query_string_part2 = '''
         ORDER BY score DESC
-        WITH DISTINCT c, d,  score
-        RETURN c.text AS text, c.page AS page, c.base64 AS base64, d.name AS name, score
-        LIMIT {self.top_k}
-        '''
+        WITH score, COLLECT(DISTINCT {text: c.text, page: c.page, base64: c.base64, name: d.name}) AS chunks
+        UNWIND chunks AS chunk
+        RETURN chunk.text AS text, chunk.page AS page, chunk.base64 AS base64, chunk.name AS name, score
+        LIMIT <top_k>
+        '''.replace('<top_k>', str(self.top_k))
         
         query_string += query_string_part2
         
@@ -119,10 +120,12 @@ class Retrieval():
         query_string = query_string_part1 + where_clause
         
         # Order results and apply limit
-        query_string_part3 = f'''
-        RETURN node.text AS text, node.page AS page, node.base64 AS base64, d.name AS name, score
+        query_string_part3 = '''
+        WITH score, COLLECT(DISTINCT {text: node.text, page: node.page, base64: node.base64, name: d.name}) AS chunks
         ORDER BY score DESC
-        LIMIT {self.top_k}'''
+        UNWIND chunks AS chunk
+        RETURN chunk.text AS text, chunk.page AS page, chunk.base64 AS base64, chunk.name AS name, score
+        LIMIT <top_k>'''.replace('<top_k>', str(self.top_k))
         
         query_string += query_string_part3
         
@@ -170,7 +173,9 @@ class Retrieval():
             greek_chunks = future_greek.result()
             english_keyword_chunks = future_english_keyword.result()
             english_embedding_chunks = future_english_embedding.result()
-
+        
+       
+       
         greek_chunks = [{'document': result[0], 'pg_number': result[1], 'pdf_name': result[2], 'img': result[3], 'score': result[4]} for result in greek_chunks]
         deduplicated = {result[0]: [result[1], result[2], result[3], result[4]] for result in english_keyword_chunks}
         for result in english_embedding_chunks:
@@ -178,7 +183,8 @@ class Retrieval():
 
         english_chunks = [{'document': key, 'pg_number': result[0], 'pdf_name': result[1], 'img': result[2], 'score': result[3]} for key, result in deduplicated.items()]
 
-
+        
+        
         result_dict = [
             {"query":self.greek_query, "chunks": greek_chunks},
             {"query":self.english_query, "chunks": english_chunks}
