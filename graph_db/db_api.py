@@ -56,7 +56,7 @@ def get_documents():
     input_data = request.get_json()
     
     # Print the received input data
-    print("Query_string:", input_data['query_string'])
+    
     
     
     # Connect to Neo4j
@@ -80,7 +80,7 @@ def keyword_search():
     input_data = request.get_json()
     
     # Print the received input data
-    print("Query_string:", input_data['query_string'])
+   
  
     params = {'query': input_data['query']}
     # Connect to Neo4j
@@ -103,7 +103,7 @@ def arbitrary_query():
     input_data = request.get_json()
     
     # Print the received input data
-    print("Query_string:", input_data['query_string'])
+    
   
     # Connect to Neo4j
     uri = "neo4j://localhost:7687"
