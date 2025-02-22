@@ -84,6 +84,7 @@ def rerank(retrieved_results):
         
     threshold = 6
     all_chunks = []
+    all_chunks_back_up = []
     for i, response in enumerate(responses):
         if not response:
             continue
@@ -93,14 +94,27 @@ def rerank(retrieved_results):
             print(ranked_results_idx, len(retrieved_results[i]["chunks"]))
 
             all_chunks_tmp = []
+            all_chunks_tmp_back_up = []
             for idx, score in enumerate(ranked_results_idx):
+                # for back up 
+                if score >= 4 and len(retrieved_results[i]["chunks"]) > 0:
+                    chunk = retrieved_results[i]['chunks'][idx]
+                    chunk["reranked_score"] = score  # Store reranked score in chunk
+                    all_chunks_tmp_back_up.append(chunk) 
+
+                # og
                 if score >= threshold and len(retrieved_results[i]["chunks"]) > 0:
                     chunk = retrieved_results[i]['chunks'][idx]
                     chunk["reranked_score"] = score  # Store reranked score in chunk
-                    all_chunks_tmp.append(chunk)
+                    all_chunks_tmp.append(chunk)        
             
             all_chunks += all_chunks_tmp
+            all_chunks_back_up += all_chunks_tmp_back_up
 
+    
+    if len(all_chunks) == 0:
+        print("Using chunks with score >= 4")
+        all_chunks = all_chunks_back_up
     # print reranked chunks with rerank score
     all_chunks.sort(key=lambda x: x["reranked_score"], reverse=True)
     print(Fore.BLUE +'RERANKED CHUNKS')

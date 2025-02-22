@@ -1,6 +1,7 @@
 from openai_acess import OpenAIModel
 from dotenv import load_dotenv
 import json
+import re
 from utils.prompts import router_prompt, persona_prompt
 
 load_dotenv()
@@ -35,9 +36,15 @@ def Router(user_query: str, history):
         }
     }
     
-    response = model.predict(inputs)
+    response = model.predict(inputs)['response']
 
-    formated_response= json.loads(response["response"])
+    print(response)
+
+    match = re.search(r'<result>(.*?)<\/result>', response)
+    if match:
+        formated_response = eval(match.group(1))  # Convert string to list
+
+    # formated_response= json.loads(response["response"])
 
     print(formated_response)
 
