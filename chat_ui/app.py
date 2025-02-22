@@ -194,8 +194,8 @@ def main():
     if st.session_state.initial:
         col_name, col_top_k, col_new_conv = st.columns([4, 1, 1], vertical_alignment="bottom")
         with col_name: st.title("ATHEX AI Nexus")
-        with col_top_k:
-            top_k_selected = st.selectbox("Top_k (for debugging only)", list(range(1, 21)))
+        # with col_top_k:
+        #     top_k_selected = st.selectbox("Top_k (for debugging only)", list(range(1, 21)))
         with col_new_conv:
             if st.button("New Session", key="new_conv", use_container_width=True):
                 create_new_conversation()
@@ -224,7 +224,7 @@ def main():
                             with st.spinner("Thinking..."):
                                 do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt, st.session_state.chat_history)
                             if do_retrieve:
-                                with st.spinner(f"Retrieving information with {top_k_selected} chunks.."):
+                                with st.spinner(f"Retrieving information..."):
                                     st.session_state.image_list = []
                                     chat_history_api = [{"question": i['query'], "answer": i['response']} for i in st.session_state.chat_history]
                                     retrieval_results = retrieve_documents(prompt, top_k_selected, chat_history_api)
@@ -259,12 +259,12 @@ def main():
     else:
         col_chat, col_images = st.columns([1.7, 1], vertical_alignment="bottom")
         
-        top_k_selected = 5
+        top_k_selected = 7
         with col_chat:
             col_name, col_top_k, col_new_conv = st.columns([4, 1, 1], vertical_alignment="bottom")
             with col_name: st.title("ATHEX AI Nexus")
-            with col_top_k:
-                top_k_selected = st.selectbox("Top_k (for debugging only)", list(range(1, 21)))
+            # with col_top_k:
+            #     top_k_selected = st.selectbox("Top_k (for debugging only)", list(range(1, 21)))
             with col_new_conv:
                 if st.button("New Session", key="new_conv", use_container_width=True):
                     create_new_conversation()
@@ -293,7 +293,7 @@ def main():
                                 with st.spinner("Thinking..."):
                                     do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt, st.session_state.chat_history)
                                 if do_retrieve:
-                                    with st.spinner(f"Retrieving information with {top_k_selected} chunks.."):
+                                    with st.spinner(f"Retrieving information..."):
                                         st.session_state.image_list = []
                                         chat_history_api = [{"question": i['query'], "answer": i['response']} for i in st.session_state.chat_history]
                                         retrieval_results = retrieve_documents(prompt, top_k_selected, chat_history_api)
