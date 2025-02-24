@@ -133,43 +133,45 @@ def display_chat_messages():
     """Display all messages in the chat interface."""
     for message in st.session_state.messages:
         if message["role"] == 'assistant':  
-            with st.chat_message(message["role"], avatar='./athex_logo.png'):
+            # with st.chat_message(message["role"], avatar='./athex_logo.png'):
+            with st.chat_message(message["role"]):
                 st.markdown(message["content"])
         else:
-            with st.chat_message(message["role"], avatar='./user.jpg'):
+            # with st.chat_message(message["role"], avatar='./user.jpg'):
+            with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
 def main():
     st.set_page_config(page_title="CodeQuestAI", page_icon="🔍", layout="wide")
 
-    st.components.v1.html(
-    """
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Function to insert the image
-        function insertImage() {
-            var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+#     st.components.v1.html(
+#     """
+#     <script>
+#     document.addEventListener('DOMContentLoaded', function () {
+#         // Function to insert the image
+#         function insertImage() {
+#             var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
             
-            if (sidebar && !window.parent.document.getElementById('customSidebarImage')) {
-                var img = document.createElement('img');
-                img.src = 'https://www.athexgroup.gr/image/company_logo?img_id=41211&t=1740171290540';
-                img.id = 'customSidebarImage';
-                img.style.width = '50%';
-                img.style.display = 'block';
-                img.style.margin = '10px auto';
+#             if (sidebar && !window.parent.document.getElementById('customSidebarImage')) {
+#                 var img = document.createElement('img');
+#                 img.src = 'https://www.athexgroup.gr/image/company_logo?img_id=41211&t=1740171290540';
+#                 img.id = 'customSidebarImage';
+#                 img.style.width = '50%';
+#                 img.style.display = 'block';
+#                 img.style.margin = '10px auto';
 
-                // Insert the image at the top of the sidebar
-                sidebar.insertBefore(img, sidebar.firstChild);
-            }
-        }
+#                 // Insert the image at the top of the sidebar
+#                 sidebar.insertBefore(img, sidebar.firstChild);
+#             }
+#         }
 
-        // Ensure the image is inserted after page load
-        window.onload = insertImage;
-        setTimeout(insertImage, 1000);  // Fallback in case of delayed sidebar rendering
-    });
-    </script>        
-    """, width=0, height=0
-)
+#         // Ensure the image is inserted after page load
+#         window.onload = insertImage;
+#         setTimeout(insertImage, 1000);  // Fallback in case of delayed sidebar rendering
+#     });
+#     </script>        
+#     """, width=0, height=0
+# )
 
     float_init(theme=True, include_unstable_primary=False)
     
@@ -221,12 +223,14 @@ def main():
             if prompt:
                 st.session_state.messages.append({"role": "user", "content": prompt})
                 with history:
-                    with st.chat_message("user", avatar='./user.jpg'):
+                    # with st.chat_message("user", avatar='./user.jpg'):
+                    with st.chat_message("user"):
                         st.markdown(prompt)
                 
                 with history:
                     # with st.chat_message("assistant"):
-                    with st.chat_message("assistant", avatar='https://th.bing.com/th?id=ODLS.3cba8519-3202-4b12-afd2-d1d22eb58175&w=32&h=32&qlt=94&pcl=fffffa&o=6&pid=1.2'):
+                    # with st.chat_message("assistant", avatar='https://th.bing.com/th?id=ODLS.3cba8519-3202-4b12-afd2-d1d22eb58175&w=32&h=32&qlt=94&pcl=fffffa&o=6&pid=1.2'):
+                    with st.chat_message("assistant"):
                         message_placeholder = st.empty()
                         full_response = ""
                         if departement == 'IT':
@@ -308,12 +312,14 @@ def main():
                 if prompt:
                     st.session_state.messages.append({"role": "user", "content": prompt})
                     with history:
-                        with st.chat_message("user", avatar='./user.jpg'):
+                        # with st.chat_message("user", avatar='./user.jpg'):
+                        with st.chat_message("user"):
                             st.markdown(prompt)
                     
                     with history:
                         # with st.chat_message("assistant"):
-                        with st.chat_message("assistant", avatar='https://th.bing.com/th?id=ODLS.3cba8519-3202-4b12-afd2-d1d22eb58175&w=32&h=32&qlt=94&pcl=fffffa&o=6&pid=1.2'):
+                        # with st.chat_message("assistant", avatar='https://th.bing.com/th?id=ODLS.3cba8519-3202-4b12-afd2-d1d22eb58175&w=32&h=32&qlt=94&pcl=fffffa&o=6&pid=1.2'):
+                        with st.chat_message("assistant"):
                             message_placeholder = st.empty()
                             full_response = ""
                             
