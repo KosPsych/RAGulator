@@ -7,15 +7,25 @@ import requests
 import json
 from PIL import Image
 from openai_file import get_azure_openai_response_stream
-from utils.prompts import generation_system_prompt, generation_user_prompt, title_system_prompt, title_user_prompt
+from utils.prompts import generation_system_prompt, generation_user_prompt, title_system_prompt, title_user_prompt, it_sys, it_user
 from typing import List, Tuple
 from streamlit_float import *
 from router import Router
 from datetime import datetime
 from openai_acess import OpenAIModel
 import uuid
+from data_dict import it_data
+
 
 openai_model = OpenAIModel()
+
+def extract_names(query):
+    pattern = r'[A-Z].[A-Z].'
+
+
+    initials = re.findall(pattern, query)
+
+    return initials
 
 def create_response_prompt(query, retr_results):
     documents = "".join(f"<document-{idx}>\nSource: page {i['pg_number']} of {i['pdf_name']}\n{i['document']}</document-{idx}>" for idx, i in enumerate(retr_results))
@@ -190,12 +200,12 @@ def main():
             ):
                 switch_conversation(conv_id)
                 st.rerun()
-    
+    top_k_selected = 7
     if st.session_state.initial:
         col_name, col_top_k, col_new_conv = st.columns([4, 1, 1], vertical_alignment="bottom")
         with col_name: st.title("ATHEX AI Nexus")
-        # with col_top_k:
-        #     top_k_selected = st.selectbox("Top_k (for debugging only)", list(range(1, 21)))
+        with col_top_k:
+            departement = st.selectbox("Department", ['Legal', 'IT'])
         with col_new_conv:
             if st.button("New Session", key="new_conv", use_container_width=True):
                 create_new_conversation()
@@ -219,41 +229,59 @@ def main():
                     with st.chat_message("assistant", avatar='https://th.bing.com/th?id=ODLS.3cba8519-3202-4b12-afd2-d1d22eb58175&w=32&h=32&qlt=94&pcl=fffffa&o=6&pid=1.2'):
                         message_placeholder = st.empty()
                         full_response = ""
-                        
-                        try:
-                            with st.spinner("Thinking..."):
-                                do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt, st.session_state.chat_history)
-                            if do_retrieve:
-                                with st.spinner(f"Retrieving information..."):
-                                    st.session_state.image_list = []
-                                    chat_history_api = [{"question": i['query'], "answer": i['response']} for i in st.session_state.chat_history]
-                                    retrieval_results = retrieve_documents(prompt, top_k_selected, chat_history_api)
-                                    s_prompt, u_prompt = create_response_prompt(prompt, retrieval_results)
-                            else:
-                                s_prompt, u_prompt = self_sym_prompt, self_user_prompt
-                            for response_chunk in get_azure_openai_response_stream(s_prompt, u_prompt, st.session_state.chat_history):
+                        if departement == 'IT':
+                            extracted_names = extract_names(prompt)
+                            doc_string = "".join(f"<document-{idx}>\n" + str(it_data[name]) + f"</document-{idx}>\n" for idx, name in enumerate(extracted_names))
+
+                            it_sys_prompt = it_sys
+                            it_user_prompt = it_user.format(documents=doc_string, query=prompt)
+                            for response_chunk in get_azure_openai_response_stream(it_sys_prompt, it_user_prompt, st.session_state.chat_history):
                                 full_response += response_chunk
                                 message_placeholder.markdown(full_response + "▌")
-                            
+
                             message_placeholder.markdown(full_response)
                             st.session_state.messages.append({"role": "assistant", "content": full_response})
                             st.session_state.chat_history.append({"query": prompt, "response": full_response})
-                            
-                            if do_retrieve:
-                                references = extract_image_references(retrieval_results)
-                                if len(references) > 0: st.session_state.initial = False
-                                for ref, image_data in references:
-                                    if not any(existing_ref == ref for existing_ref, _ in st.session_state.image_list):
-                                        st.session_state.image_list.append((ref, image_data))
-                            
-                            # Save the current conversation state
+
                             save_current_conversation_state()
                             st.rerun()
-                            
-                        except Exception as e:
-                            error_message = f"An error occurred: {str(e)}"
-                            message_placeholder.markdown(error_message)
-                            st.session_state.messages.append({"role": "assistant", "content": error_message})
+
+                        else:
+
+                            try:
+                                with st.spinner("Thinking..."):                                
+                                    do_retrieve, self_sym_prompt, self_user_prompt = Router(prompt, st.session_state.chat_history)
+                                if do_retrieve:
+                                    with st.spinner(f"Retrieving information..."):
+                                        st.session_state.image_list = []
+                                        chat_history_api = [{"question": i['query'], "answer": i['response']} for i in st.session_state.chat_history]
+                                        retrieval_results = retrieve_documents(prompt, top_k_selected, chat_history_api)
+                                        s_prompt, u_prompt = create_response_prompt(prompt, retrieval_results)
+                                else:
+                                    s_prompt, u_prompt = self_sym_prompt, self_user_prompt
+                                for response_chunk in get_azure_openai_response_stream(s_prompt, u_prompt, st.session_state.chat_history):
+                                    full_response += response_chunk
+                                    message_placeholder.markdown(full_response + "▌")
+                                
+                                message_placeholder.markdown(full_response)
+                                st.session_state.messages.append({"role": "assistant", "content": full_response})
+                                st.session_state.chat_history.append({"query": prompt, "response": full_response})
+                                
+                                if do_retrieve:
+                                    references = extract_image_references(retrieval_results)
+                                    if len(references) > 0: st.session_state.initial = False
+                                    for ref, image_data in references:
+                                        if not any(existing_ref == ref for existing_ref, _ in st.session_state.image_list):
+                                            st.session_state.image_list.append((ref, image_data))
+                                
+                                # Save the current conversation state
+                                save_current_conversation_state()
+                                st.rerun()
+                                
+                            except Exception as e:
+                                error_message = f"An error occurred: {str(e)}"
+                                message_placeholder.markdown(error_message)
+                                st.session_state.messages.append({"role": "assistant", "content": error_message})
 
 ################################# here is the og code ######################################################
     else:
@@ -263,8 +291,8 @@ def main():
         with col_chat:
             col_name, col_top_k, col_new_conv = st.columns([4, 1, 1], vertical_alignment="bottom")
             with col_name: st.title("ATHEX AI Nexus")
-            # with col_top_k:
-            #     top_k_selected = st.selectbox("Top_k (for debugging only)", list(range(1, 21)))
+            with col_top_k:
+                departement = st.selectbox("Department", ['Legal', 'IT'])
             with col_new_conv:
                 if st.button("New Session", key="new_conv", use_container_width=True):
                     create_new_conversation()
