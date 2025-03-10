@@ -110,7 +110,7 @@ pytest
 
 | Metric | Performance |
 |--------|------------|
-| Accuracy (bringing the right page(s) | 92.3% |
+| Accuracy (retrieval) | 92.3% |
 | Response Time | <2s |
 | Document Processing Speed | ~3 MB/s |
 
