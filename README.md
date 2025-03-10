@@ -5,7 +5,7 @@
 
 ## Overview
 
-RAGulator is a complete Retrieval-Augmented Generation (RAG) system developed for the AI Hackathon of AUEB Greece 2025. The system specializes in processing complex legal PDF documents and can ingest information from:
+RAGulator is a complete Retrieval-Augmented Generation (RAG) system developed for the ![AI Hackathon of AUEB Greece 2025](https://www.hackathongreece.ai/). The system specializes in processing complex legal PDF documents and can ingest information from:
 - Scanned images
 - Greek/English text
 - Figures and tables
